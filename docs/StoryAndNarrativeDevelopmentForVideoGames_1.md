@@ -49,7 +49,7 @@
   **3.2 Emotional Context in Games**
   - Games like Angry Birds illustrate the emotional connection between characters, enhancing player engagement.
   - Understanding the emotional relationship between the protagonist and antagonist helps in defining the game's story and character motivations.
-  **
+  
   **3.3 Rising Action and Game Difficulty**
   - The concept of rising action is crucial; the story's energy should increase, with escalating conflicts leading to a climax.
   - Similar to game levels, challenges should become progressively harder, requiring players to improve their skills.
@@ -92,23 +92,30 @@
   - **Questions:**
   
     - Where are we; where/when does the story take place?
+    >
     - Who are we following in the story (the protagonist) and why them?
+    >
     - Who or what force is opposed to the hero of the story, and why are they in opposition (the antagonist)?
+    >
     - What do these characters want to accomplish; what is at stake for them?
+    >
     - What is the ensuing conflict, and why does it exist?
+    >
     - How does the action rise; how do things get more tense?
+    >
     - What is the final crisis, and how does it play out?
+    >
     - How do things resolve and wrap up?
     ### _**3. Defining Characters and Character Goals**_
-    3.1 Character Development 
+    **3.1 Character Development** 
       - Characters serve as the player's portal into the game's story, enhancing engagement through their depth and personality.
       - Even in non-story games like chess, game pieces can be viewed as characters with unique traits and motivations.
       
-    3.2 Protagonists and Antagonists
+    **3.2 Protagonists and Antagonists**
       - The protagonist, or hero, drives the plot and is typically the character the player controls, such as Jim Raynor in StarCraft II.
       - Antagonists have opposing goals, creating conflict; for example, Emperor Mengsk seeks to eliminate Jim Raynor to maintain power.
       
-    3.3 Character Goals
+    **3.3 Character Goals**
     - Characters should have both immediate goals (challenges faced during gameplay) and overarching goals (deeper desires that shape their actions).
     - Understanding these goals adds depth to characters, making their motivations clearer and enhancing the overall narrative experience.
 
@@ -142,20 +149,33 @@
   
   **List of Questions:**
    - Who is he/she? Are they a primary or secondary character and how do they relate to the game story?
+  >
   
    - What do they look like? What are they wearing or carrying with them?
+ >
  
    - What is their personality like and how does that personality help fulfill their role in the game story?
-  
+ >
+ 
    - How do they relate to other characters in the game?
-  
+>
+
    - What are their strengths and weaknesses, and how can that affect the game story?
-  
+>
+
    - What are the motivating character goals for this character?
 
 **5. Questions Setting Descriptions**
   - Where are we? 
+  >
+  
   - What does this place have to do with the game story? 
+  >
+  
   - How does this place relate to the characters? 
+  >
+  
   - Where did we come from and where does this place lead? 
+  >
+  
   - What does this setting look like?
