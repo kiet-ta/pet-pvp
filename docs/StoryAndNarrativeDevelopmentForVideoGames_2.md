@@ -78,3 +78,18 @@
     6. HOW DOES THE ACTION RISE?
     7. WHAT's THE FINAL CRISIS?
     8. HOW DOES THE STORY RESOLVE?
+
+## IV. From Story to Game
+### 1. Introduction to a Game Design Document
+- Design Document Overview
+  - A design document serves as a comprehensive outline for your game, useful for pitching ideas.
+  - Various templates exist, and it's essential to find one that suits your needs.
+- Introduction Section
+  - Start with a compelling introduction that explains your game's story and objectives.
+  - Include a "spine" to engage readers and briefly describe gameplay mechanics.
+- Detailed Game Overview
+  - Provide a chronological description of the game, integrating story elements and gameplay.
+  - Use flowcharts to visualize the game's structure and progression.
+- Gameplay Aspects
+  - Conclude with a discussion of core gameplay mechanics and any unique features.
+  - Highlight how players interact with the game, using examples from well-known games.
