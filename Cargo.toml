@@ -1,8 +1,12 @@
-[package]
-name = "pet-pvp"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+resolver = "3"
+members = [
+    "crates/client",
+    "crates/server",
+    "crates/shared",
+]
 
-[dependencies]
+[workspace.dependencies]
 bevy = "0.17.3"
 bevy_rapier2d = { version = "0.32.0", features = [ "simd-stable", "debug-render-2d" ] }
+shared = { path = "crates/shared" }
