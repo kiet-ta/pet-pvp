@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 bevy.workspace = true
-shared.workspace = true 
+shared.workspace = true
+bevy_rapier2d.workspace = true

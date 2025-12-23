@@ -93,3 +93,11 @@ When you call query.get(entity_id), Bevy looks up this ledger, jumps to Table A,
   - The order is reversed (Player 3 jumps to the front), but ECS doesn't care about the order, it only cares about the data being complete and correct. --> **THAT IS OVERIDE**
 
 Deletion speed is O(1) - Super fast even for arrays with 1 million elements.
+
+### Define ECS
+
+ECS stands for Entity-Component-System, a design pattern commonly used in game development and simulations to manage complex data and behavior in a modular and efficient way. It separates data (components) from behavior (systems) and organizes entities as collections of components.
+
+- **Components**: Plain data structures that hold the state of an entity (e.g., Position, Velocity, Health).
+- **Resources**: Singleton, Global data accessible by systems (e.g., Game Settings, Asset Handles).
+- **Events**: Messages that can be sent and received between systems to trigger actions (e.g., Collision Events, Input Events).
