@@ -1,11 +1,26 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// --- MILESTONE 1: INPUT ---
+pub const RELIABLE_CHANNEL_ID: u8 = 0;
+pub const UNRELIABLE_CHANNEL_ID: u8 = 1;
+pub const PROTOCOL_ID: u64 = 7;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum ClientMessages {
+    PlayerInput { action: PlayerInput },
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum ServerMessages {
+    PlayerConnected { id: u64 },
+    PlayerDisconnected { id: u64 },
+    PlayerSync { id: u64, position: Vec2 },
+}
 
 // Define the actions that a Player can perform
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize, Resource)]
 pub struct PlayerInput {
     pub move_axis: f32, // Horizontal movement: -1.0 (Left) to 1.0 (Right)
     pub jump: bool,
@@ -70,7 +85,7 @@ fn player_movement_system(
     for (entity, mut vel) in query.iter_mut() {
         if let Some(input) = inputs.map.get(&entity) {
             let speed = 200.0;
-            
+
             // Apply horizontal velocity
             vel.linvel.x = input.move_axis * speed;
 

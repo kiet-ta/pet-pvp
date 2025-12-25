@@ -7,3 +7,7 @@ edition = "2024"
 bevy.workspace = true
 shared.workspace = true
 bevy_rapier2d.workspace = true
+bevy_renet.workspace = true
+renet.workspace = true
+serde.workspace = true
+bincode.workspace = true

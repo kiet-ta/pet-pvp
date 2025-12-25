@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 bevy.workspace = true
 bevy_rapier2d.workspace = true
+serde = { version = "1.0.228", features = ["derive"] }
