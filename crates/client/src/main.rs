@@ -2,7 +2,8 @@ use bevy::prelude::*;
 use bevy_renet::renet::{ConnectionConfig, RenetClient};
 use bevy_renet::RenetClientPlugin;
 use bevy_renet::netcode::{ClientAuthentication, NetcodeClientPlugin, NetcodeClientTransport};
-use shared::{PlayerInput, ServerMessages, SharedPlugin, PROTOCOL_ID};
+use shared::SharedPlugin;
+use shared::protocol::{PlayerInput, ClientMessages, ServerMessages, PROTOCOL_ID, UNRELIABLE_CHANNEL_ID};
 use std::collections::HashMap;
 use std::net::UdpSocket;
 use std::time::SystemTime;
@@ -84,9 +85,9 @@ fn send_input(
 ) {
     if !client.is_connected() { return; }
 
-    let message = shared::ClientMessages::PlayerInput { action: *input };
+    let message = ClientMessages::PlayerInput { input: *input };
     let serialized = bincode::serialize(&message).unwrap();
-    client.send_message(shared::UNRELIABLE_CHANNEL_ID, serialized);
+    client.send_message(UNRELIABLE_CHANNEL_ID, serialized);
 }
 
 // 3. Receive & Sync Visuals
@@ -96,7 +97,7 @@ fn client_sync(
     mut lobby: ResMut<Lobby>,
     mut transform_query: Query<&mut Transform>,
 ) {
-    while let Some(message) = client.receive_message(shared::UNRELIABLE_CHANNEL_ID) {
+    while let Some(message) = client.receive_message(UNRELIABLE_CHANNEL_ID) {
         if let Ok(msg) = bincode::deserialize::<ServerMessages>(&message) {
             match msg {
                 ServerMessages::PlayerSync { id, position } => {

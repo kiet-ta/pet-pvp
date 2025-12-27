@@ -1,29 +1,44 @@
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Component)]
-pub enum ClientMessages {
-    PlayerInput { action: crate::PlayerAction },
-}
+// =================================================================================
+// NETWORK CONSTANTS
+// Define channels and protocol ID so Client/Server establish identical connection.
+// =================================================================================
 
-#[derive(Debug, Serialize, Deserialize)]
-pub enum ServerMessages {
-    PlayerStateSync { translation: Vec2, entity_id: u32 },
-}
-
-// Config channel for renet (like choose channel radio)
 pub const RELIABLE_CHANNEL_ID: u8 = 0;
-pub const UNRELIABLE_CHANNEL_ID: u8 = 1; // use input/position (fastest)
+pub const UNRELIABLE_CHANNEL_ID: u8 = 1;
+pub const PROTOCOL_ID: u64 = 7;
 
+// =================================================================================
+// DATA TRANSFER OBJECTS
+// These structs contain pure data, no logic.
+// =================================================================================
+
+/// Player input data.
+/// This struct is sent over the network, so it needs Serialize/Deserialize.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize, Resource)]
+pub struct PlayerInput {
+    pub move_axis: f32, // Horizontal movement: -1.0 (Left) to 1.0 (Right)
+    pub jump: bool,     // Jump state
+}
+
+// =================================================================================
+// NETWORK MESSAGES
+// Define communication "Language".
+// =================================================================================
+
+/// Messages sent from Client -> Server
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum NetworkMessage {
-    // Client send Input and Frame for Server
-    InputUpdate {
-        frame: u32,
-        action: crate::PlayerAction,
-    },
-    // Server send state world (snapshot) for Client
-    WorldStateSync {
-        frame: u32,
-        player_positions: Vec<(u32, bevy::prelude::Vec2)>, // ID and positions
-    },
+pub enum ClientMessages {
+    PlayerInput { input: PlayerInput },
+}
+
+/// Messages sent from Server -> Client
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum ServerMessages {
+    PlayerConnected { id: u64 },
+    PlayerDisconnected { id: u64 },
+    // Position synchronization (snapshot)
+    PlayerSync { id: u64, position: Vec2 },
 }

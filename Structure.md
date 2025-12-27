@@ -13,6 +13,7 @@ pet-pvp/ (Root)
 
 ## Project Architecture Overview
 
+This project is Authoritative Server + Client architecture built with Bevy.
 This project is organized as a **multi-crate workspace** to clearly separate shared logic, server authority, and client experience.
 The goal is to keep the game **deterministic**, **secure**, and **smooth** in a networked environment.
 

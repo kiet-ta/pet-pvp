@@ -1,40 +1,37 @@
+pub mod protocol;
+
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub const RELIABLE_CHANNEL_ID: u8 = 0;
-pub const UNRELIABLE_CHANNEL_ID: u8 = 1;
-pub const PROTOCOL_ID: u64 = 7;
+// Import "Communication Language" from protocol.rs
+use crate::protocol::PlayerInput;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum ClientMessages {
-    PlayerInput { action: PlayerInput },
-}
+// =================================================================================
+// COMPONENTS
+// Components attached to Entities to define Game Logic.
+// =================================================================================
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum ServerMessages {
-    PlayerConnected { id: u64 },
-    PlayerDisconnected { id: u64 },
-    PlayerSync { id: u64, position: Vec2 },
-}
+#[derive(Component)]
+pub struct Player;
 
-// Define the actions that a Player can perform
-#[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize, Resource)]
-pub struct PlayerInput {
-    pub move_axis: f32, // Horizontal movement: -1.0 (Left) to 1.0 (Right)
-    pub jump: bool,
-}
+// =================================================================================
+// RESOURCES
+// Global data used to manage logic.
+// =================================================================================
 
-// Resource to store Input of ALL players (Entity -> Input)
-// The Server will receive this from the Network, the Client will populate this from the Keyboard
+/// Resource storing Input of ALL players (Entity -> Input).
+/// The Server will update this from the network (ClientMessages).
+/// The Client will update this from the keyboard (Local Input).
 #[derive(Resource, Default)]
 pub struct PlayerInputs {
     pub map: HashMap<Entity, PlayerInput>,
 }
 
-#[derive(Component)]
-pub struct Player;
+// =================================================================================
+// PLUGINS & SYSTEMS
+// Where to assemble features into the Bevy Engine.
+// =================================================================================
 
 pub struct SharedPlugin;
 
@@ -43,13 +40,14 @@ impl Plugin for SharedPlugin {
         app.add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
             .init_resource::<PlayerInputs>()
             .add_systems(Startup, setup_scene)
-            // Important: Movement logic must run in FixedUpdate for consistency
+            // Important: Physics movement logic should run in FixedUpdate for synchronization
             .add_systems(FixedUpdate, player_movement_system);
     }
 }
 
+/// Initialize game environment (Ground, Test Character...)
 fn setup_scene(mut commands: Commands) {
-    // Spawn Player
+    // Spawn Player (Temporarily spawn here to test physics logic)
     commands.spawn((
         Player,
         Sprite {
@@ -73,11 +71,12 @@ fn setup_scene(mut commands: Commands) {
             ..default()
         },
         RigidBody::Fixed,
-        Collider::cuboid(500.0, 25.0), // Half-extents
+        Collider::cuboid(500.0, 25.0), // Half-extents (equal to 1/2 actual size)
         Transform::from_xyz(0.0, -100.0, 0.0),
     ));
 }
 
+/// System handling movement based on received Input
 fn player_movement_system(
     inputs: Res<PlayerInputs>,
     mut query: Query<(Entity, &mut Velocity), With<Player>>,
@@ -86,13 +85,14 @@ fn player_movement_system(
         if let Some(input) = inputs.map.get(&entity) {
             let speed = 200.0;
 
-            // Apply horizontal velocity
+            // Handle horizontal movement
             vel.linvel.x = input.move_axis * speed;
 
-            // Apply jump
+            // Handle jump
             if input.jump {
+                // Only allow jumping when Y velocity is near 0 (standing on ground)
+                // Note: This logic is simple, effectively needs Raycast to check ground
                 if vel.linvel.y.abs() < 0.1 {
-                    // Only allow jumping when grounded
                     vel.linvel.y = 400.0;
                 }
             }

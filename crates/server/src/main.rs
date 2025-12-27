@@ -1,12 +1,13 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use bevy_renet::renet::{
-    ConnectionConfig, RenetServer, ServerEvent,
-};
+use bevy_renet::renet::{ConnectionConfig, RenetServer, ServerEvent};
 use bevy_renet::RenetServerPlugin;
 // Adjusting imports based on common bevy_renet structure
-use bevy_renet::netcode::{NetcodeServerPlugin, NetcodeServerTransport, ServerAuthentication, ServerConfig};
-use shared::{PlayerInput, ServerMessages, SharedPlugin, PROTOCOL_ID};
+use bevy_renet::netcode::{
+    NetcodeServerPlugin, NetcodeServerTransport, ServerAuthentication, ServerConfig,
+};
+use shared::SharedPlugin;
+use shared::protocol::{PlayerInput, ClientMessages, ServerMessages, PROTOCOL_ID, RELIABLE_CHANNEL_ID, UNRELIABLE_CHANNEL_ID};
 use std::collections::HashMap;
 use std::net::UdpSocket;
 use std::time::SystemTime;
@@ -25,17 +26,20 @@ fn main() {
     app.add_plugins(SharedPlugin);
 
     app.init_resource::<Lobby>();
-    
+
     // Server & Transport Setup
     let (server, transport) = new_renet_server();
     app.insert_resource(server);
     app.insert_resource(transport);
 
-    app.add_systems(Update, (
-        server_events,      // Handle Connect/Disconnect
-        process_packets,    // Handle Inputs
-        sync_players,       // Send positions to clients
-    ));
+    app.add_systems(
+        Update,
+        (
+            server_events,   // Handle Connect/Disconnect
+            process_packets, // Handle Inputs
+            sync_players,    // Send positions to clients
+        ),
+    );
 
     app.run();
 }
@@ -43,8 +47,10 @@ fn main() {
 fn new_renet_server() -> (RenetServer, NetcodeServerTransport) {
     let public_addr = "127.0.0.1:5000".parse().unwrap();
     let socket = UdpSocket::bind(public_addr).unwrap();
-    let current_time = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
-    
+    let current_time = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap();
+
     let server_config = ServerConfig {
         current_time,
         max_clients: 64,
@@ -70,32 +76,38 @@ fn server_events(
         match event {
             ServerEvent::ClientConnected { client_id } => {
                 println!("Client {} connected.", client_id);
-                
+
                 // Spawn player entity (Authoritative)
-                let player_entity = commands.spawn((
-                    shared::Player, // Tag component
-                    Transform::from_xyz(0.0, 100.0, 0.0),
-                    RigidBody::Dynamic,
-                    Collider::cuboid(25.0, 25.0),
-                    Velocity::default(),
-                    LockedAxes::ROTATION_LOCKED,
-                )).id();
+                let player_entity = commands
+                    .spawn((
+                        shared::Player, // Tag component
+                        Transform::from_xyz(0.0, 100.0, 0.0),
+                        RigidBody::Dynamic,
+                        Collider::cuboid(25.0, 25.0),
+                        Velocity::default(),
+                        LockedAxes::ROTATION_LOCKED,
+                    ))
+                    .id();
 
                 // Map ID -> Entity
                 lobby.players.insert(*client_id, player_entity);
 
                 // Notify everyone (Optional, but good for reliable spawn)
-                let message = bincode::serialize(&ServerMessages::PlayerConnected { id: *client_id }).unwrap();
-                server.broadcast_message(shared::RELIABLE_CHANNEL_ID, message);
+                let message =
+                    bincode::serialize(&ServerMessages::PlayerConnected { id: *client_id })
+                        .unwrap();
+                server.broadcast_message(RELIABLE_CHANNEL_ID, message);
             }
             ServerEvent::ClientDisconnected { client_id, reason } => {
                 println!("Client {} disconnected: {}", client_id, reason);
                 if let Some(entity) = lobby.players.remove(client_id) {
                     commands.entity(entity).despawn();
                 }
-                
-                let message = bincode::serialize(&ServerMessages::PlayerDisconnected { id: *client_id }).unwrap();
-                server.broadcast_message(shared::RELIABLE_CHANNEL_ID, message);
+
+                let message =
+                    bincode::serialize(&ServerMessages::PlayerDisconnected { id: *client_id })
+                        .unwrap();
+                server.broadcast_message(RELIABLE_CHANNEL_ID, message);
             }
         }
     }
@@ -105,11 +117,13 @@ fn server_events(
 fn process_packets(
     mut server: ResMut<RenetServer>,
     lobby: Res<Lobby>,
-    mut query: Query<&mut Velocity>, 
+    mut query: Query<&mut Velocity>,
 ) {
     for client_id in server.clients_id() {
-        while let Some(message) = server.receive_message(client_id, shared::UNRELIABLE_CHANNEL_ID) {
-            if let Ok(shared::ClientMessages::PlayerInput { action }) = bincode::deserialize(&message) {
+        while let Some(message) = server.receive_message(client_id, UNRELIABLE_CHANNEL_ID) {
+            if let Ok(ClientMessages::PlayerInput { input: action }) =
+                bincode::deserialize(&message)
+            {
                 // Apply input to the SPECIFIC entity owned by this Client
                 if let Some(&entity) = lobby.players.get(&client_id) {
                     if let Ok(mut velocity) = query.get_mut(entity) {
@@ -130,21 +144,17 @@ fn apply_input(velocity: &mut Velocity, input: PlayerInput) {
 }
 
 // 3. Sync State: Server -> Client
-fn sync_players(
-    mut server: ResMut<RenetServer>,
-    lobby: Res<Lobby>,
-    query: Query<&Transform>,
-) {
+fn sync_players(mut server: ResMut<RenetServer>, lobby: Res<Lobby>, query: Query<&Transform>) {
     for (client_id, &entity) in lobby.players.iter() {
         if let Ok(transform) = query.get(entity) {
             let message = ServerMessages::PlayerSync {
                 id: *client_id,
                 position: transform.translation.truncate(), // Vec3 -> Vec2
             };
-            
+
             let serialized = bincode::serialize(&message).unwrap();
             // Broadcast position to ALL clients (so everyone sees everyone)
-            server.broadcast_message(shared::UNRELIABLE_CHANNEL_ID, serialized);
+            server.broadcast_message(UNRELIABLE_CHANNEL_ID, serialized);
         }
     }
 }
