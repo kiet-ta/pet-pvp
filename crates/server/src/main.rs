@@ -70,7 +70,7 @@ fn new_renet_server() -> (RenetServer, NetcodeServerTransport) {
 
 // 1. Manage Connections: Spawn/Despawn Players
 fn server_events(
-    mut events: EventReader<ServerEvent>,
+    mut events: MessageReader<ServerEvent>,
     mut commands: Commands,
     mut lobby: ResMut<Lobby>,
     mut server: ResMut<RenetServer>,
@@ -128,10 +128,10 @@ fn process_packets(
                 bincode::deserialize(&message)
             {
                 // Apply input to the SPECIFIC entity owned by this Client
-                if let Some(&entity) = lobby.players.get(&client_id) {
-                    if let Ok(mut velocity) = query.get_mut(entity) {
-                        apply_input(&mut velocity, action);
-                    }
+                if let Some(&entity) = lobby.players.get(&client_id)
+                    && let Ok(mut velocity) = query.get_mut(entity)
+                {
+                    apply_input(&mut velocity, action);
                 }
             }
         }
