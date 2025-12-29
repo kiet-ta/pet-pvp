@@ -45,6 +45,7 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: stable
           components: clippy, rustfmt
         # Pinned to stable channel; components ensure fmt and clippy are available
 
