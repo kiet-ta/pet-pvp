@@ -51,7 +51,7 @@ fn setup_scene(mut commands: Commands) {
     commands.spawn((
         Player,
         Sprite {
-            color: Color::srgb(1.0, 0.0, 0.0),
+            color: Color::srgb(1.0, 0.0, 0.0), // Red Color
             custom_size: Some(Vec2::new(50.0, 50.0)),
             ..default()
         },

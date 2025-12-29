@@ -1,13 +1,16 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use bevy_renet::renet::{ConnectionConfig, RenetServer, ServerEvent};
 use bevy_renet::RenetServerPlugin;
+use bevy_renet::renet::{ConnectionConfig, RenetServer, ServerEvent};
 // Adjusting imports based on common bevy_renet structure
 use bevy_renet::netcode::{
     NetcodeServerPlugin, NetcodeServerTransport, ServerAuthentication, ServerConfig,
 };
 use shared::SharedPlugin;
-use shared::protocol::{PlayerInput, ClientMessages, ServerMessages, PROTOCOL_ID, RELIABLE_CHANNEL_ID, UNRELIABLE_CHANNEL_ID};
+use shared::protocol::{
+    ClientMessages, PROTOCOL_ID, PlayerInput, RELIABLE_CHANNEL_ID, ServerMessages,
+    UNRELIABLE_CHANNEL_ID,
+};
 use std::collections::HashMap;
 use std::net::UdpSocket;
 use std::time::SystemTime;
