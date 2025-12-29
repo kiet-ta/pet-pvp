@@ -1,0 +1,108 @@
+name: PHO CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# Global environment variables for better readability and consistency
+env:
+  CARGO_TERM_COLOR: always                  # Force colored output in CI logs for easier debugging
+  CARGO_INCREMENTAL: 0                      # Disable incremental compilation to avoid artifacts and save cache space
+  RUSTFLAGS: "-C debuginfo=0 -D warnings"   # Reduce debug info for faster builds; treat all warnings as errors globally
+
+# Restrict default GITHUB_TOKEN permissions for security (best practice 2025)
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  # Main quality gate job: formatting, linting, compilation check, tests, docs, and security audit
+  quality-gate:
+    name: Quality Checks & Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]  # Cross-platform testing to catch OS-specific issues (critical for Bevy rendering/audio)
+      fail-fast: false
+
+    steps:
+      # Checkout the repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        # v4 pinned to specific major version for security and reproducibility
+
+      # Install Linux-specific system dependencies required for Bevy (only on Ubuntu)
+      - name: Install Bevy Dependencies (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ pkg-config libx11-dev libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev libclang-dev
+        # Added libclang-dev for potential bindgen usage in some Bevy setups
+
+      # Setup Rust toolchain with required components
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+        # Pinned to stable channel; components ensure fmt and clippy are available
+
+      # Cache Cargo registry, git deps, and target directory for massive build time savings
+      - name: Cache Rust Dependencies
+        uses: Swatinem/rust-cache@v2
+        # Smart caching based on Cargo.lock hash – one of the best speedups for Rust CI
+
+      # Enforce consistent code formatting across the workspace
+      - name: Check Code Formatting
+        run: cargo fmt --all -- --check
+        # Fails if code isn't formatted; encourages running `cargo fmt` locally
+
+      # Run Clippy linter with all warnings treated as errors
+      - name: Lint with Clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+        # Checks entire workspace, including all features/targets for thorough linting
+
+      # Fast compilation check without building artifacts
+      - name: Check Compilation
+        run: cargo check --workspace --all-targets --all-features --verbose
+        # Faster than full build; catches most compile errors early
+
+      # Build and run documentation to ensure examples/docs compile
+      - name: Check Documentation
+        run: cargo doc --workspace --no-deps --all-features
+        # Ensures public API docs build correctly; catches doc errors
+
+      # Execute all tests (unit, integration, doc tests via --all-targets)
+      - name: Run Tests
+        run: cargo test --workspace --all-targets --all-features --verbose
+        # Comprehensive testing; --all-features covers optional deps
+
+      # Security audit: scan dependencies for known vulnerabilities
+      - name: Security Audit (cargo audit)
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit
+        # Uses RustSec advisory database; fails on any known vuln (critical for supply chain security)
+
+  # Separate job for Miri: detects undefined behavior in unsafe code (important for Bevy)
+  miri-stability:
+    name: Miri UB Detection
+    runs-on: ubuntu-latest
+    needs: quality-gate  # Only run if main quality gate passes (saves time)
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Nightly Toolchain with Miri
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri
+
+      - name: Cache Rust Dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run Miri Tests
+        run: cargo miri test --workspace
+        # Interprets code to catch UB; run selectively as it's slower
