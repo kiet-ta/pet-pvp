@@ -19,6 +19,7 @@ pub const PROTOCOL_ID: u64 = 7;
 /// This struct is sent over the network, so it needs Serialize/Deserialize.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize, Resource)]
 pub struct PlayerInput {
+    pub tick: u64,      // The client's simulation frame for this input
     pub move_axis: f32, // Horizontal movement: -1.0 (Left) to 1.0 (Right)
     pub jump: bool,     // Jump state
 }
@@ -37,8 +38,17 @@ pub enum ClientMessages {
 /// Messages sent from Server -> Client
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ServerMessages {
-    PlayerConnected { id: u64 },
-    PlayerDisconnected { id: u64 },
+    PlayerConnected {
+        id: u64,
+    },
+    PlayerDisconnected {
+        id: u64,
+    },
     // Position synchronization (snapshot)
-    PlayerSync { id: u64, position: Vec2 },
+    PlayerSync {
+        id: u64,
+        position: Vec2,
+        velocity: Vec2, // Sync velocity too for smoother interpolation/prediction
+        last_input_tick: Option<u64>, // The last input tick the server processed for this player
+    },
 }
